@@ -1,7 +1,7 @@
 #include<iostream>
 #define MAX 100 
 using namespace std;
-
+//
 template<typename T>
 class skiplist
 {
