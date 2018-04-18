@@ -1,8 +1,8 @@
 #include<iostream>
 #define MAX 100 
 using namespace std;
-//
-template<typename T>
+
+template<typename T,typename V >
 class skiplist
 {
 private:
@@ -10,6 +10,7 @@ private:
 	class node{
 		public:
 		T data;
+		V value;
 		node* next=NULL;
 		node* down=NULL;
 		int level;
@@ -63,7 +64,8 @@ private:
 		while(tmp->down!=NULL){
 			tmp=tmp->down;
 		}
-		//from start[0] to tmp
+		//test
+		//from start[0] to tmp 
 		int i=0;
 		node* stmp=start[0];
 		for(;;i++){
@@ -77,6 +79,15 @@ private:
 		}
 		
 	}
+	node* get_base_pointer(node* pos){
+		//down to level 0
+		node* tmp=pos;
+		while(tmp->down!=NULL){
+			tmp=tmp->down;
+		}
+		return tmp;
+	}
+	
 	int search_level(node** begin,T val){
 		node* tmp=*begin;
 		while(tmp!=NULL){
@@ -108,6 +119,51 @@ private:
 				}
 			}
 		}
+	}
+	int search_level(node** begin,T val,node** ret){
+		node* tmp=*begin;
+		while(tmp!=NULL){
+			cout<<tmp->data<<":"<<endl;
+			if(tmp->data==val){
+				*ret = get_base_pointer(tmp);
+				return 0;
+			}
+			if(tmp->next==NULL){
+				cout<<"ins NULL";
+				{
+					if(tmp->down==NULL){
+						*ret = tmp;
+						return -2;
+					}
+					//cout<<tmp->down->data;
+					*begin=tmp->down;
+					*ret=NULL;
+					return -1;
+				}
+			}
+			if(tmp->data<val && tmp->next->data<=val){
+				tmp=tmp->next;
+				continue;
+			}
+			if(tmp->data<val && tmp->next->data>val){
+				if(tmp->down==NULL){
+					*ret=tmp;
+					return -2;
+				}else{
+					*begin=tmp->down;
+					*ret=NULL;
+					return -1;
+				}
+			}
+		}
+	}
+	node* get_position(T val){
+		node* begin=start[depth-1];
+		node* aim=NULL;
+		for(int i=0;aim==NULL;i++){
+			search_level(&begin,val,&aim);
+		}
+		return aim;
 	}
 public:
 	skiplist(){
@@ -154,7 +210,27 @@ public:
 	int get_depth(){
 		return this->depth;
 	}
-	
+	int insert(T val){
+		//too small 
+		//new head
+		if(val<start[0]->data){
+			node* tmp=start[0]->next;
+			node* newnode=new node(start[0]->data,0);
+			newnode->next = tmp;
+			start[0]->next = newnode;
+			//new head
+			for(int i =0;i<depth;i++){
+				start[i]->data=val;
+			}
+			return 0;
+		}
+		node* pos=get_position(val);
+		node* tmp=pos->next;
+		node* newnode=new node(val,0);
+		newnode->next = tmp;
+		pos->next = newnode;
+		return 0;
+	} 
 	//test
 	void show_data(int level){
 		cout<<&(this->start[level])<<"now in level "<<level<<endl;
@@ -168,7 +244,7 @@ public:
 };
 int main(){
 	int ar[10]={1,2,3,4,5,6,7,8,9,10};
-	skiplist<int> *a= new skiplist<int>(10,ar);
+	skiplist<int,int> *a= new skiplist<int,int>(10,ar);
 	a->show_data(0);
 	a->show_data(1);
 	a->show_data(2);
@@ -177,6 +253,12 @@ int main(){
 	for(int i=0;i<10;i++)
 		cout<<"result i="<<a->search(i)<<endl;
 	//cout<<"result:"<<a->search(6)<<endl;
+
+	a->show_data(0);
+	a->insert(-2);
+	for(int i=2;i<15;i++)
+		a->insert(i);
+	a->show_data(0);
 	getchar();
 	return 0;
 } 
